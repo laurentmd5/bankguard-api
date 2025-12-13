@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bankguard-service
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: bankguard-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5000  # CORRESPOND AU PORT DE TON APP
+    protocol: TCP

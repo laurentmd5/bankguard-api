@@ -1,0 +1,37 @@
+# Fichiers de développement
+.git/
+.gitignore
+*.pyc
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environnements virtuels
+venv/
+env/
+.venv/
+
+# Fichiers IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Tests et coverage
+tests/
+.coverage
+
+# Fichiers sensibles
+.env
+.secrets/
+*.pem
+*.key
+
+# Fichiers temporaires
+tmp/
+temp/

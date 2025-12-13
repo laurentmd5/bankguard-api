@@ -1,0 +1,28 @@
+# gitops-manifests/apps/bankguard/base/kustomization.yaml
+# CONFIGURATION COMMUNE à dev, staging, prod
+# Ne JAMAIS modifier directement - utiliser les overlays
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Ressources Kubernetes à inclure
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - configmap.yaml
+  - secret.yaml
+  - serviceaccount.yaml
+
+# Labels communs à toutes les ressources
+commonLabels:
+  app.kubernetes.io/name: bankguard-api
+  app.kubernetes.io/component: api
+  app.kubernetes.io/part-of: bankguard-system
+  app.kubernetes.io/managed-by: gitops
+
+# Images - seront overridées par les overlays
+images:
+  - name: bankguard-api
+    newName: ghcr.io/laurentmd5/bankguard-api  # À MODIFIER AVANT PUSH
+    newTag: PLACEHOLDER

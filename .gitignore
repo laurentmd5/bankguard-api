@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Docker
+.env
+docker-compose.override.yml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfstate.backup
+*.tfvars
+secrets.auto.tfvars
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Secrets
+secrets.yaml
+.env
+*.pem
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Backup
+backup/
+tmp/
+
+# Application specific
+app/__pycache__/
+app/*.log
