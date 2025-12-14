@@ -5,6 +5,8 @@ namespace: bankguard-dev
 
 resources:
 - ../../base
+- postgres-deployment.yaml
+- redis-deployment.yaml 
 
 patchesStrategicMerge:
 - deployment-patch.yaml
