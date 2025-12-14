@@ -4,40 +4,40 @@ kind: Kustomization
 namespace: bankguard-dev
 
 resources:
-- ../../base
-- postgres-deployment.yaml
-- redis-deployment.yaml
-- service-monitor.yaml
-- grafana-dashboard.yaml
-- chaos-resilience-test.yaml
-- prometheus-rules.yaml 
-
-patchesStrategicMerge:
-- deployment-patch.yaml
-- image-patch.yaml  
+  - ../../base
+  - postgres-deployment.yaml
+  - redis-deployment.yaml
+  - service-monitor.yaml
+  - grafana-dashboard.yaml
+  - prometheus-rules.yaml
 
 images:
-- name: ghcr.io/laurentmd5/bankguard-api
-  newTag: latest-dev
+  - name: ghcr.io/laurentmd5/bankguard-api
+    newTag: latest-dev
 
 configMapGenerator:
-- name: bankguard-config
-  literals:
-    - ENVIRONMENT=development
-    - LOG_LEVEL=DEBUG
-    - DB_HOST=postgres-service.bankguard-dev.svc.cluster.local
-    - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
-    - FLASK_ENV=development
+  - name: bankguard-config
+    literals:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - DB_HOST=postgres-service.bankguard-dev.svc.cluster.local
+      - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
+      - FLASK_ENV=development
 
 secretGenerator:
-- name: bankguard-secrets
-  literals:
-    - DB_PASSWORD=fakepassword123
-    - REDIS_PASSWORD=redispass123
-    - SECRET_KEY=mysecretkey123456
-    - JWT_SECRET=jwtsecret789012
-  type: Opaque
-
+  - name: bankguard-secrets
+    type: Opaque
+    literals:
+      - DB_PASSWORD=fakepassword123
+      - REDIS_PASSWORD=redispass123
+      - SECRET_KEY=mysecretkey123456
+      - JWT_SECRET=jwtsecret789012
 
 configurations:
   - kustomizeconfig.yaml
+
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: bankguard-api
