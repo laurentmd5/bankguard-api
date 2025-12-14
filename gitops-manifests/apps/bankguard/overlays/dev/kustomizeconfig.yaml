@@ -1,0 +1,10 @@
+nameReference:
+- kind: ConfigMap
+  fieldSpecs:
+  - kind: Deployment
+    path: spec/template/spec/containers/envFrom/configMapRef/name
+
+- kind: Secret
+  fieldSpecs:
+  - kind: Deployment
+    path: spec/template/spec/containers/envFrom/secretRef/name

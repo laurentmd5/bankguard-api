@@ -5,48 +5,32 @@ namespace: bankguard-dev
 
 resources:
 - ../../base
-- bankguard.yaml
-- bankguard-secrets.yaml
-- configmap-patch.yaml
-- deployment-patch.yaml
+
 patches:
 - path: deployment-patch.yaml
-  target:
-    kind: Deployment
-    name: bankguard-api
-    version: v1
-- path: configmap-patch.yaml
-  target:
-    kind: ConfigMap
-    name: bankguard-config
-    version: v1
-- patch: |-
-    - op: replace
-      path: /spec/replicas
-      value: 2
-  target:
-    kind: Deployment
-    name: bankguard-api
-    version: v1
 
 images:
-- name: bankguard-api
-  newName: ghcr.io/laurentmd5/bankguard-api
+- name: ghcr.io/laurentmd5/bankguard-api
   newTag: latest-dev
 
 configMapGenerator:
-- behavior: merge
+- name: bankguard-config
   literals:
-  - ENVIRONMENT=development
-  - LOG_LEVEL=DEBUG
-  - DB_HOST=postgres-service.bankguard-dev.svc.cluster.local
-  - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
-  - FLASK_ENV=development
-  name: bankguard-config
+    - ENVIRONMENT=development
+    - LOG_LEVEL=DEBUG
+    - DB_HOST=postgres-service.bankguard-dev.svc.cluster.local
+    - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
+    - FLASK_ENV=development
 
 secretGenerator:
-- behavior: merge
-  files:
-  - bankguard-secrets.yaml
-  name: bankguard-secrets
+- name: bankguard-secrets
+  literals:
+    - DB_PASSWORD=fakepassword123
+    - REDIS_PASSWORD=redispass123
+    - SECRET_KEY=mysecretkey123456
+    - JWT_SECRET=jwtsecret789012
   type: Opaque
+
+
+configurations:
+- kustomizeconfig.yaml

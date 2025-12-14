@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bankguard-api
-  namespace: bankguard-dev
   labels:
     app.kubernetes.io/name: bankguard-api
     app.kubernetes.io/component: api

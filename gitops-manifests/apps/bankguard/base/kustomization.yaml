@@ -10,16 +10,13 @@ resources:
 - deployment.yaml
 - service.yaml
 - ingress.yaml
-- configmap.yaml
-- secret.yaml
 - serviceaccount.yaml
 
 # Labels communs à toutes les ressources
 
 # Images - seront overridées par les overlays
 images:
-- name: bankguard-api
-  newName: ghcr.io/laurentmd5/bankguard-api
+- name: ghcr.io/laurentmd5/bankguard-api
   newTag: PLACEHOLDER
 labels:
 - includeSelectors: true

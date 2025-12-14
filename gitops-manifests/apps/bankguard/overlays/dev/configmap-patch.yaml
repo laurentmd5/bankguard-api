@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: bankguard-config
-data:
-  # Configuration spécifique développement
-  DEVELOPMENT_FEATURES: "enabled"
-  CACHE_TTL: "60"
-  API_RATE_LIMIT: "100"
