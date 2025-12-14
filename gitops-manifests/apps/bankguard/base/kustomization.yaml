@@ -7,22 +7,24 @@ kind: Kustomization
 
 # Ressources Kubernetes à inclure
 resources:
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
-  - configmap.yaml
-  - secret.yaml
-  - serviceaccount.yaml
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+- configmap.yaml
+- secret.yaml
+- serviceaccount.yaml
 
 # Labels communs à toutes les ressources
-commonLabels:
-  app.kubernetes.io/name: bankguard-api
-  app.kubernetes.io/component: api
-  app.kubernetes.io/part-of: bankguard-system
-  app.kubernetes.io/managed-by: gitops
 
 # Images - seront overridées par les overlays
 images:
-  - name: bankguard-api
-    newName: ghcr.io/laurentmd5/bankguard-api  # À MODIFIER AVANT PUSH
-    newTag: PLACEHOLDER
+- name: bankguard-api
+  newName: ghcr.io/laurentmd5/bankguard-api
+  newTag: PLACEHOLDER
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/managed-by: gitops
+    app.kubernetes.io/name: bankguard-api
+    app.kubernetes.io/part-of: bankguard-system

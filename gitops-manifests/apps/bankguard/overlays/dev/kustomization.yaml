@@ -4,46 +4,49 @@ kind: Kustomization
 namespace: bankguard-dev
 
 resources:
-  - ../../base
-  - ../../../namespaces/bankguard.yaml
+- ../../base
+- bankguard.yaml
+- bankguard-secrets.yaml
+- configmap-patch.yaml
+- deployment-patch.yaml
 patches:
-  - path: deployment-patch.yaml
-    target:
-      kind: Deployment
-      name: bankguard-api
-      version: v1
-  - path: configmap-patch.yaml
-    target:
-      kind: ConfigMap
-      name: bankguard-config
-      version: v1
-  - patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2
-    target:
-      kind: Deployment
-      name: bankguard-api
-      version: v1
+- path: deployment-patch.yaml
+  target:
+    kind: Deployment
+    name: bankguard-api
+    version: v1
+- path: configmap-patch.yaml
+  target:
+    kind: ConfigMap
+    name: bankguard-config
+    version: v1
+- patch: |-
+    - op: replace
+      path: /spec/replicas
+      value: 2
+  target:
+    kind: Deployment
+    name: bankguard-api
+    version: v1
 
 images:
-  - name: bankguard-api
-    newName: ghcr.io/laurentmd5/bankguard-api
-    newTag: latest-dev
+- name: bankguard-api
+  newName: ghcr.io/laurentmd5/bankguard-api
+  newTag: latest-dev
 
 configMapGenerator:
-  - name: bankguard-config
-    behavior: merge
-    literals:
-      - ENVIRONMENT=development
-      - LOG_LEVEL=DEBUG
-      - DB_HOST=postgres-service.bankguard-dev.svc.cluster.local
-      - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
-      - FLASK_ENV=development
+- behavior: merge
+  literals:
+  - ENVIRONMENT=development
+  - LOG_LEVEL=DEBUG
+  - DB_HOST=postgres-service.bankguard-dev.svc.cluster.local
+  - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
+  - FLASK_ENV=development
+  name: bankguard-config
 
 secretGenerator:
-  - name: bankguard-secrets
-    behavior: merge
-    files:
-      - bankguard-secrets.yaml
-    type: Opaque
+- behavior: merge
+  files:
+  - bankguard-secrets.yaml
+  name: bankguard-secrets
+  type: Opaque
