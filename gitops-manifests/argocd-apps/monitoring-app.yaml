@@ -6,9 +6,31 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/laurentmd5/bankguard-api.git
-    targetRevision: HEAD
-    path: gitops-manifests/infra/monitoring/overlays/dev
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 58.2.0
+    chart: kube-prometheus-stack
+    helm:
+      values: |
+        grafana:
+          enabled: true
+          adminPassword: admin
+          service:
+            type: NodePort
+            nodePort: 30000
+        
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorNamespaceSelector: {}
+        
+        alertmanager:
+          enabled: false
+        
+        prometheus-node-exporter:
+          enabled: true
+        
+        kube-state-metrics:
+          enabled: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

@@ -4,7 +4,7 @@ metadata:
   name: bankguard-monitor
   namespace: bankguard-dev
   labels:
-    release: prometheus  # Doit matcher le label de votre Prometheus
+    release: kube-prometheus-stack  # À ajuster si nécessaire
 spec:
   selector:
     matchLabels:
@@ -14,6 +14,3 @@ spec:
     interval: 15s
     path: /metrics
     honorLabels: true
-    relabelings:
-    - sourceLabels: [__meta_kubernetes_pod_name]
-      targetLabel: pod
