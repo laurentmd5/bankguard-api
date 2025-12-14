@@ -12,7 +12,7 @@ patchesStrategicMerge:
 
 images:
 - name: ghcr.io/laurentmd5/bankguard-api
-  newTag: __IMAGE_TAG__
+  newTag: latest-dev
 
 configMapGenerator:
 - name: bankguard-config

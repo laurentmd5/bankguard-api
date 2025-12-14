@@ -45,7 +45,7 @@ spec:
                   - bankguard-api
       containers:
       - name: bankguard-api
-        image: ghcr.io/laurentmd5/bankguard-api:__IMAGE_TAG__
+        image: ghcr.io/laurentmd5/bankguard-api
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
