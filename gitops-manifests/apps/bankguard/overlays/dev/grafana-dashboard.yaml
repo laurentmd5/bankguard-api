@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bankguard-grafana-dashboard
+  namespace: monitoring  # Dans le namespace de Grafana
+  labels:
+    grafana_dashboard: "1"
+data:
+  bankguard-golden-signals.json: |-
+    {
+      "dashboard": {
+        "title": "SRE Golden Signals - BankGuard",
+        "panels": [
+          {
+            "title": "Trafic (RPS)",
+            "targets": [{
+              "expr": "sum(rate(flask_http_request_duration_seconds_count[5m])) by (method, endpoint)",
+              "legendFormat": "{{method}} {{endpoint}}"
+            }]
+          },
+          {
+            "title": "Latence (p99)",
+            "targets": [{
+              "expr": "histogram_quantile(0.99, sum(rate(flask_http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+              "legendFormat": "p99 {{endpoint}}"
+            }]
+          },
+          {
+            "title": "Erreurs (Taux 5xx)",
+            "targets": [{
+              "expr": "sum(rate(flask_http_request_total{status=~\"5..\"}[5m])) / sum(rate(flask_http_request_total[5m])) * 100",
+              "legendFormat": "Taux erreurs 5xx"
+            }]
+          },
+          {
+            "title": "Saturation CPU/RAM",
+            "targets": [
+              {
+                "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"bankguard-dev\"}[5m])) by (pod) * 100",
+                "legendFormat": "CPU {{pod}} %"
+              },
+              {
+                "expr": "sum(container_memory_working_set_bytes{namespace=\"bankguard-dev\"}) by (pod) / 1024 / 1024",
+                "legendFormat": "RAM {{pod}} MB"
+              }
+            ]
+          }
+        ]
+      }
+    }

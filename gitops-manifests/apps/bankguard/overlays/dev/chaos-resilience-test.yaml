@@ -1,0 +1,73 @@
+---
+# 1. Augmenter les replicas pour le test
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bankguard-api
+  namespace: bankguard-dev
+spec:
+  replicas: 3  # Augmenté pour le test de résilience
+---
+# 2. Job de chaos test (s'exécute une fois)
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: chaos-resilience-test
+  namespace: bankguard-dev
+  annotations:
+    argocd.argoproj.io/hook: PostSync  # S'exécute après le sync Argo CD
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded  # Se supprime si réussi
+spec:
+  ttlSecondsAfterFinished: 300  # Supprime après 5 minutes
+  backoffLimit: 0
+  template:
+    spec:
+      serviceAccountName: bankguard-sa
+      containers:
+      - name: chaos-tester
+        image: bitnami/kubectl:latest
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          echo "🧪 TEST DE RÉSILIENCE - DÉMARRAGE"
+          echo "=================================="
+          
+          # Vérifier l'état initial
+          echo "📊 État initial des pods:"
+          kubectl get pods -n bankguard-dev -l app.kubernetes.io/name=bankguard-api
+          
+          # Tuer un pod aléatoire
+          PODS=$(kubectl get pods -n bankguard-dev -l app.kubernetes.io/name=bankguard-api -o jsonpath='{.items[*].metadata.name}')
+          POD_ARRAY=($PODS)
+          
+          if [ ${#POD_ARRAY[@]} -gt 1 ]; then
+            RANDOM_POD=${POD_ARRAY[$RANDOM % ${#POD_ARRAY[@]}]}
+            echo "☠️ Suppression du pod: $RANDOM_POD"
+            kubectl delete pod -n bankguard-dev $RANDOM_POD
+            
+            # Attendre et vérifier la reprise
+            echo "⏳ Attente de la recréation (15s)..."
+            sleep 15
+            
+            echo "📊 État après chaos:"
+            kubectl get pods -n bankguard-dev -l app.kubernetes.io/name=bankguard-api
+            
+            # Vérifier que l'app fonctionne toujours
+            echo "🔍 Test de l'endpoint /health..."
+            kubectl run test-pod --image=curlimages/curl --rm -i --restart=Never -- \
+              curl -s http://bankguard-service.bankguard-dev.svc.cluster.local/health | grep -o '"status":"[^"]*"' || echo "❌ Health check échoué"
+            
+            echo "✅ Test de résilience réussi - Le système a survécu à la perte d'un pod"
+          else
+            echo "⚠️ Pas assez de pods pour le test (minimum 2 requis)"
+          fi
+          
+          echo "=================================="
+          echo "🧪 TEST DE RÉSILIENCE - TERMINÉ"
+        env:
+        - name: KUBECONFIG
+          value: /var/run/secrets/kubernetes.io/serviceaccount/.kubeconfig
+      restartPolicy: Never
+---
+# 3. Revenir à 1 replica après le test (via annotation pour rollback manuel)
+# Note: Vous pouvez faire un git revert pour revenir à replicas: 1

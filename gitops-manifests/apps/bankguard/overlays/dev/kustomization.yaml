@@ -6,7 +6,11 @@ namespace: bankguard-dev
 resources:
 - ../../base
 - postgres-deployment.yaml
-- redis-deployment.yaml 
+- redis-deployment.yaml
+- service-monitor.yaml
+- grafana-dashboard.yaml
+- chaos-resilience-test.yaml
+- prometheus-rules.yaml 
 
 patchesStrategicMerge:
 - deployment-patch.yaml

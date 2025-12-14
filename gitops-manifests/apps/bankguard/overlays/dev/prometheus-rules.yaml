@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: bankguard-resilience-rules
+  namespace: bankguard-dev
+spec:
+  groups:
+  - name: bankguard-resilience
+    rules:
+    - alert: HighErrorRate
+      expr: sum(rate(flask_http_request_total{status=~"5..", namespace="bankguard-dev"}[5m])) / sum(rate(flask_http_request_total{namespace="bankguard-dev"}[5m])) * 100 > 5
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Taux d'erreurs élevé sur BankGuard"
+        description: "Le taux d'erreurs 5xx est de {{ $value }}%"
+    
+    - alert: PodRestartRateHigh
+      expr: rate(kube_pod_container_status_restarts_total{namespace="bankguard-dev"}[10m]) > 0.5
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Taux de redémarrage élevé des pods"
+        description: "Les pods redémarrent trop fréquemment ({{ $value }} restarts/min)"
+    
+    - alert: ServiceDown
+      expr: up{job="bankguard-api", namespace="bankguard-dev"} == 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Service BankGuard down"
+        description: "Le service BankGuard n'est plus scrapé par Prometheus"
