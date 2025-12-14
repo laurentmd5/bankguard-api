@@ -17,15 +17,15 @@ spec:
       - name: postgres
         image: postgres:15-alpine
         env:
-        - name: POSTGRES_USER       
-          value: "bankguard"        
+        - name: POSTGRES_USER
+          value: "bankguard"
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
               name: bankguard-secrets-485m9525b7
               key: DB_PASSWORD
         - name: POSTGRES_DB
-          value: bankdb
+          value: "bankdb"
         ports:
         - containerPort: 5432
         resources:
