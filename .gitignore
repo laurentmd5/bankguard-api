@@ -51,4 +51,3 @@ tmp/
 # Application specific
 app/__pycache__/
 app/*.log
-gitops-manifests/apps/bankguard/overlays/dev/bankguard-secrets.yaml
