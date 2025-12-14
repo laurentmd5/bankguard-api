@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: monitoring
+
+helmCharts:
+- name: kube-prometheus-stack
+  repo: https://prometheus-community.github.io/helm-charts
+  version: 58.2.0
+  releaseName: kube-prometheus-stack
+  valuesInline:
+    grafana:
+      enabled: true
+      adminPassword: admin
+      service:
+        type: NodePort
+        nodePort: 30000
+    prometheus:
+      enabled: true
+      prometheusSpec:
+        serviceMonitorSelectorNilUsesHelmValues: false
+        serviceMonitorNamespaceSelector: {}
+        podMonitorSelectorNilUsesHelmValues: false
+        podMonitorNamespaceSelector: {}
