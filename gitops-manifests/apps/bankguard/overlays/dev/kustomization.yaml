@@ -6,12 +6,13 @@ namespace: bankguard-dev
 resources:
 - ../../base
 
-patches:
-- path: deployment-patch.yaml
+patchesStrategicMerge:
+- deployment-patch.yaml
+- image-patch.yaml  
 
 images:
 - name: ghcr.io/laurentmd5/bankguard-api
-  newTag: latest-dev
+  newTag: __IMAGE_TAG__
 
 configMapGenerator:
 - name: bankguard-config
@@ -33,4 +34,4 @@ secretGenerator:
 
 
 configurations:
-- kustomizeconfig.yaml
+  - kustomizeconfig.yaml

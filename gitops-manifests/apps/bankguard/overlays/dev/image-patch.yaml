@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bankguard-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: bankguard-api
+        image: ghcr.io/laurentmd5/bankguard-api:__IMAGE_TAG__
