@@ -6,24 +6,33 @@ namespace: bankguard-dev
 resources:
   - ../../base
 
-# Utiliser la nouvelle syntaxe "patches" pour Kustomize v5+
 patches:
+  - deployment-patch.yaml
+  - configmap-patch.yaml
+
+patchesJson6902:
   - target:
+      group: apps
+      version: v1
       kind: Deployment
       name: bankguard-api
-    path: deployment-patch.yaml
-  - target:
-      kind: ConfigMap
-      name: bankguard-config
-    path: configmap-patch.yaml
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: add
+        path: /spec/template/spec/containers/0/env
+        value:
+          - name: FLASK_DEBUG
+            value: "true"
+          - name: DEBUG_METRICS
+            value: "1"
 
-# Images spécifiques dev (remplacer "latest" ou SHA selon workflow GHCR)
 images:
   - name: bankguard-api
     newName: ghcr.io/laurentmd5/bankguard-api
     newTag: latest-dev
 
-# Génération de ConfigMap spécifique dev
 configMapGenerator:
   - name: bankguard-config
     behavior: merge
@@ -34,11 +43,4 @@ configMapGenerator:
       - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
       - FLASK_ENV=development
 
-# Génération de Secret spécifique dev
-secretGenerator:
-  - name: bankguard-secrets
-    behavior: merge
-    literals:
-      - DB_PASSWORD=dev_password_123
-      - REDIS_PASSWORD=dev_redis_123
-    type: Opaque
+
