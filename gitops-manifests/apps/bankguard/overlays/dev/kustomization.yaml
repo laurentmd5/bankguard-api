@@ -1,50 +1,32 @@
-# gitops-manifests/apps/bankguard/overlays/dev/kustomization.yaml
-# CONFIGURATION SPÉCIFIQUE ENVIRONNEMENT DE DÉVELOPPEMENT
-
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: bankguard-dev  # Transforme "bankguard" en "bankguard-dev"
+namespace: bankguard-dev
 
-# Référence à la configuration de base
 resources:
   - ../../base
 
-# Patchs stratégiques pour modifier la base
-patchesStrategicMerge:
-  - deployment-patch.yaml
-  - configmap-patch.yaml
-
-# Patchs JSON pour modifications fines
-patchesJson6902:
+# Utiliser la nouvelle syntaxe "patches" pour Kustomize v5+
+patches:
   - target:
-      group: apps
-      version: v1
       kind: Deployment
       name: bankguard-api
-    patch: |-
-      - op: replace
-        path: /spec/replicas
-        value: 2  # Moins de replicas en dev
-      
-      - op: add
-        path: /spec/template/spec/containers/0/env
-        value:
-          - name: FLASK_DEBUG
-            value: "true"
-          - name: DEBUG_METRICS
-            value: "1"
+    path: deployment-patch.yaml
+  - target:
+      kind: ConfigMap
+      name: bankguard-config
+    path: configmap-patch.yaml
 
-# Images spécifiques dev
+# Images spécifiques dev (remplacer "latest" ou SHA selon workflow GHCR)
 images:
   - name: bankguard-api
-    newName: ghcr.io/laurentmd5/bankguard-api  # À MODIFIER
-    newTag: latest-dev  # En dev, on peut utiliser "latest-dev"
+    newName: ghcr.io/laurentmd5/bankguard-api
+    newTag: latest-dev
 
-# Génération de ConfigMaps
+# Génération de ConfigMap spécifique dev
 configMapGenerator:
   - name: bankguard-config
-    behavior: merge  # Fusionne avec la base
+    behavior: merge
     literals:
       - ENVIRONMENT=development
       - LOG_LEVEL=DEBUG
@@ -52,12 +34,11 @@ configMapGenerator:
       - REDIS_HOST=redis-service.bankguard-dev.svc.cluster.local
       - FLASK_ENV=development
 
-# Génération de Secrets
-# ATTENTION: En vrai projet, ces secrets viendraient d'un vault
+# Génération de Secret spécifique dev
 secretGenerator:
   - name: bankguard-secrets
     behavior: merge
     literals:
-      - DB_PASSWORD=dev_password_123  # À CHANGER EN PROD
-      - REDIS_PASSWORD=dev_redis_123   # À CHANGER EN PROD
+      - DB_PASSWORD=dev_password_123
+      - REDIS_PASSWORD=dev_redis_123
     type: Opaque

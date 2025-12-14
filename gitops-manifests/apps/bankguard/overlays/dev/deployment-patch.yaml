@@ -1,16 +1,14 @@
-# gitops-manifests/apps/bankguard/overlays/dev/deployment-patch.yaml
-# Patchs spécifiques au développement
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: bankguard-api
 spec:
+  replicas: 2  # Moins de réplicas pour dev
   template:
     spec:
       containers:
       - name: bankguard-api
-        # Ressources réduites pour le dev
+        # Ressources réduites pour dev
         resources:
           requests:
             memory: "64Mi"
@@ -18,10 +16,13 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "100m"
-        
-        # Variables d'environnement supplémentaires pour dev
+        # Variables supplémentaires pour dev
         env:
         - name: DEVELOPMENT_MODE
           value: "true"
         - name: SKIP_AUTH
-          value: "true"  # Pour faciliter le dev
+          value: "true"
+        - name: FLASK_DEBUG
+          value: "true"
+        - name: DEBUG_METRICS
+          value: "1"

@@ -5,5 +5,5 @@ metadata:
 data:
   # Configuration spécifique développement
   DEVELOPMENT_FEATURES: "enabled"
-  CACHE_TTL: "60"  # TTL court pour le cache en dev
-  API_RATE_LIMIT: "100"  # Limite haute en dev
+  CACHE_TTL: "60"
+  API_RATE_LIMIT: "100"
