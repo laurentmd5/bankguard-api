@@ -6,16 +6,17 @@ namespace: bankguard-dev
 resources:
   - ../../base
   - postgres-deployment.yaml
+  - postgres-service.yaml
   - redis-deployment.yaml
+  - redis-service.yaml
   - service-monitor.yaml
   - grafana-dashboard.yaml
   - prometheus-rules.yaml
-  - postgres-service.yaml
-  - redis-service.yaml
 
+# ⚠️ TAG PLACEHOLDER — sera modifié automatiquement par ArgoCD Image Updater
 images:
   - name: ghcr.io/laurentmd5/bankguard-api
-    newTag: latest-dev
+    newTag: dev-0000000
 
 configMapGenerator:
   - name: bankguard-config
@@ -35,8 +36,8 @@ secretGenerator:
       - SECRET_KEY=mysecretkey123456
       - JWT_SECRET=jwtsecret789012
 
-configurations:
-  - kustomizeconfig.yaml
+generatorOptions:
+  disableNameSuffixHash: true
 
 patches:
   - path: deployment-patch.yaml
