@@ -1,4 +1,3 @@
-import sys
 
 # Lire le fichier app.py
 with open('app.py', 'r') as f:

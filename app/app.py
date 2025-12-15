@@ -115,14 +115,14 @@ def readiness_check():
     Peut prendre quelques secondes (timeout 15s configuré)
     """
     start_time = datetime.utcnow()
-    
+
     health_data = {
         'status': 'ready',
         'timestamp': start_time.isoformat(),
         'service': 'bankguard-api',
         'check': 'readiness'
     }
-    
+
     # Vérifier PostgreSQL
     db_start = datetime.utcnow()
     db_conn = get_db_connection()
@@ -137,7 +137,7 @@ def readiness_check():
     else:
         health_data['database'] = {'status': 'disconnected'}
         health_data['status'] = 'not_ready'
-    
+
     # Vérifier Redis
     redis_start = datetime.utcnow()
     redis_client = get_redis_client()
@@ -152,11 +152,11 @@ def readiness_check():
     else:
         health_data['cache'] = {'status': 'disconnected'}
         health_data['status'] = 'not_ready'
-    
+
     # Temps total
     total_time_ms = int((datetime.utcnow() - start_time).total_seconds() * 1000)
     health_data['total_response_time_ms'] = total_time_ms
-    
+
     status_code = 200 if health_data['status'] == 'ready' else 503
     return jsonify(health_data), status_code
 
@@ -179,13 +179,13 @@ def get_balance(account_id=None):
     # Utiliser '123' comme compte par défaut si non spécifié
     if account_id is None:
         account_id = request.args.get('account', '123')
-    
+
     logger.info(f"Requête solde pour le compte: {account_id}")
-    
+
     # 1. Essayer Redis d'abord
     redis_client = get_redis_client()
     cache_key = f"balance:{account_id}"
-    
+
     if redis_client:
         try:
             cached_balance = redis_client.get(cache_key)
@@ -202,23 +202,23 @@ def get_balance(account_id=None):
                 })
         except Exception as e:
             logger.warning(f"Erreur lecture Redis: {e}")
-    
+
     # 2. Si pas en cache, lire PostgreSQL
     db_conn = get_db_connection()
     if db_conn:
         try:
             cursor = db_conn.cursor()
             cursor.execute("""
-                SELECT balance, updated_at 
-                FROM accounts 
+                SELECT balance, updated_at
+                FROM accounts
                 WHERE account_id = %s
             """, (account_id,))
             result = cursor.fetchone()
-            
+
             if result:
                 balance = result[0]
                 updated_at = result[1]
-                
+
                 # Mettre en cache Redis (TTL: 5 minutes)
                 if redis_client:
                     try:
@@ -226,7 +226,7 @@ def get_balance(account_id=None):
                         logger.info(f"Cache mis à jour pour {account_id}")
                     except Exception as e:
                         logger.warning(f"Erreur écriture Redis: {e}")
-                
+
                 logger.info(f"Données DB pour {account_id}: {balance} EUR")
                 return jsonify({
                     'account': account_id,
@@ -245,7 +245,7 @@ def get_balance(account_id=None):
                     'error': 'Account not found',
                     'timestamp': datetime.utcnow().isoformat()
                 }), 404
-                
+
         except Exception as e:
             logger.error(f"Erreur requête DB: {e}")
             db_conn.rollback()
@@ -254,11 +254,11 @@ def get_balance(account_id=None):
             db_conn.close()
     else:
         logger.warning("Connexion DB échouée, utilisation du fallback")
-    
+
     # 3. Fallback: données fictives
     fallback_balance = 1000.00
     logger.info(f"Fallback pour {account_id}: {fallback_balance} EUR")
-    
+
     return jsonify({
         'account': account_id,
         'balance': fallback_balance,
@@ -304,7 +304,7 @@ def index():
 if __name__ == '__main__':
     debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
     port = int(os.getenv('PORT', '5000'))
-    
+
     logger.info(f"Démarrage BankGuard API sur le port {port}")
     app.run(
         host='0.0.0.0',
