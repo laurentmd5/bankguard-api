@@ -10,6 +10,8 @@ resources:
   - service-monitor.yaml
   - grafana-dashboard.yaml
   - prometheus-rules.yaml
+  - postgres-service.yaml
+  - redis-service.yaml
 
 images:
   - name: ghcr.io/laurentmd5/bankguard-api

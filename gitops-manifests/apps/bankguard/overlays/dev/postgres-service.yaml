@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: bankguard-dev
+  labels:
+    app.kubernetes.io/component: database
+    app.kubernetes.io/managed-by: gitops
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: bankguard-system
+spec:
+  selector:
+    app: postgres
+  ports:
+  - name: postgres
+    protocol: TCP
+    port: 5432
+    targetPort: 5432
+  type: ClusterIP
