@@ -1,7 +1,8 @@
 """
 BankGuard API - Microservice bancaire
-Routes: /balance, /health, /metrics
+Routes: /balance, /health/live, /health/ready, /metrics
 Avec cache Redis et base PostgreSQL
+Optimisé pour Kubernetes probes
 """
 import os
 import logging
@@ -44,6 +45,7 @@ REDIS_HOST = os.getenv('REDIS_HOST', 'redis-service')
 REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
 
+
 def get_db_connection():
     """Établit une connexion PostgreSQL avec gestion d'erreur"""
     try:
@@ -53,9 +55,9 @@ def get_db_connection():
             database=DB_NAME,
             user=DB_USER,
             password=DB_PASSWORD,
-            connect_timeout=10
+            connect_timeout=3  # Réduit pour les probes
         )
-        logger.info(f"Connexion DB réussie à {DB_HOST}:{DB_PORT}")
+        logger.debug(f"Connexion DB réussie à {DB_HOST}:{DB_PORT}")
         return conn
     except psycopg2.OperationalError as e:
         logger.error(f"Erreur connexion DB: {e}")
@@ -63,6 +65,7 @@ def get_db_connection():
     except Exception as e:
         logger.error(f"Erreur inattendue DB: {e}")
         return None
+
 
 def get_redis_client():
     """Établit une connexion Redis avec gestion d'erreur"""
@@ -72,12 +75,12 @@ def get_redis_client():
             port=REDIS_PORT,
             password=REDIS_PASSWORD if REDIS_PASSWORD else None,
             decode_responses=True,
-            socket_connect_timeout=5,
-            socket_timeout=5
+            socket_connect_timeout=2,  # Réduit pour les probes
+            socket_timeout=2
         )
-        # Test de connexion
+        # Test de connexion rapide
         client.ping()
-        logger.info(f"Connexion Redis réussie à {REDIS_HOST}:{REDIS_PORT}")
+        logger.debug(f"Connexion Redis réussie à {REDIS_HOST}:{REDIS_PORT}")
         return client
     except redis.ConnectionError as e:
         logger.error(f"Erreur connexion Redis: {e}")
@@ -86,48 +89,84 @@ def get_redis_client():
         logger.error(f"Erreur inattendue Redis: {e}")
         return None
 
-@app.route('/health', methods=['GET'])
+
+@app.route('/health/live', methods=['GET'])
 @metrics.do_not_track()
-def health_check():
+def liveness_check():
     """
-    Endpoint de santé pour Kubernetes probes
-    Retourne l'état de tous les services dépendants
+    Liveness probe pour Kubernetes - TRÈS RAPIDE (<100ms)
+    Vérifie seulement que l'application tourne
+    Ne fait AUCUNE vérification réseau
     """
-    health_data = {
-        'status': 'healthy',
+    return jsonify({
+        'status': 'alive',
         'timestamp': datetime.utcnow().isoformat(),
         'service': 'bankguard-api',
-        'version': '1.0.0'
+        'check': 'liveness'
+    }), 200
+
+
+@app.route('/health/ready', methods=['GET'])
+@metrics.do_not_track()
+def readiness_check():
+    """
+    Readiness probe pour Kubernetes - COMPLET
+    Vérifie que tous les services dépendants sont accessibles
+    Peut prendre quelques secondes (timeout 15s configuré)
+    """
+    start_time = datetime.utcnow()
+    
+    health_data = {
+        'status': 'ready',
+        'timestamp': start_time.isoformat(),
+        'service': 'bankguard-api',
+        'check': 'readiness'
     }
     
     # Vérifier PostgreSQL
+    db_start = datetime.utcnow()
     db_conn = get_db_connection()
     if db_conn:
         health_data['database'] = {
             'status': 'connected',
             'host': DB_HOST,
-            'port': DB_PORT
+            'port': DB_PORT,
+            'response_time_ms': int((datetime.utcnow() - db_start).total_seconds() * 1000)
         }
         db_conn.close()
     else:
         health_data['database'] = {'status': 'disconnected'}
-        health_data['status'] = 'degraded'
+        health_data['status'] = 'not_ready'
     
     # Vérifier Redis
+    redis_start = datetime.utcnow()
     redis_client = get_redis_client()
     if redis_client:
         health_data['cache'] = {
             'status': 'connected',
             'host': REDIS_HOST,
-            'port': REDIS_PORT
+            'port': REDIS_PORT,
+            'response_time_ms': int((datetime.utcnow() - redis_start).total_seconds() * 1000)
         }
         redis_client.close()
     else:
         health_data['cache'] = {'status': 'disconnected'}
-        health_data['status'] = 'degraded'
+        health_data['status'] = 'not_ready'
     
-    status_code = 200 if health_data['status'] == 'healthy' else 503
+    # Temps total
+    total_time_ms = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+    health_data['total_response_time_ms'] = total_time_ms
+    
+    status_code = 200 if health_data['status'] == 'ready' else 503
     return jsonify(health_data), status_code
+
+
+@app.route('/health', methods=['GET'])
+@metrics.do_not_track()
+def health_check():
+    """Alias vers /health/ready pour compatibilité"""
+    return readiness_check()
+
 
 @app.route('/balance', methods=['GET'])
 @app.route('/balance/<account_id>', methods=['GET'])
@@ -210,7 +249,6 @@ def get_balance(account_id=None):
         except Exception as e:
             logger.error(f"Erreur requête DB: {e}")
             db_conn.rollback()
-            # Pas de return ici, on continue au fallback
         finally:
             cursor.close()
             db_conn.close()
@@ -231,17 +269,17 @@ def get_balance(account_id=None):
         'timestamp': datetime.utcnow().isoformat()
     })
 
+
 @app.route('/metrics', methods=['GET'])
 @metrics.do_not_track()
 def metrics_endpoint():
     """Endpoint pour Prometheus (géré automatiquement par prometheus-flask-exporter)"""
     try:
-        # Essayer la méthode normale
         return metrics.export()
     except AttributeError:
-        # Fallback pour le mode debug
         from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-        return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}    
+        return generate_latest(), 200, {'Content-Type': CONTENT_TYPE_LATEST}
+
 
 @app.route('/', methods=['GET'])
 @metrics.do_not_track()
@@ -252,7 +290,9 @@ def index():
         'version': '1.0.0',
         'endpoints': {
             'GET /': 'Cette page',
-            'GET /health': 'Santé de l\'application',
+            'GET /health/live': 'Liveness probe (rapide)',
+            'GET /health/ready': 'Readiness probe (complet)',
+            'GET /health': 'Santé complète (alias /health/ready)',
             'GET /balance': 'Solde du compte par défaut (123)',
             'GET /balance/<account_id>': 'Solde d\'un compte spécifique',
             'GET /metrics': 'Métriques Prometheus'
@@ -260,8 +300,8 @@ def index():
         'timestamp': datetime.utcnow().isoformat()
     })
 
+
 if __name__ == '__main__':
-    # Variables pour le développement local
     debug_mode = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
     port = int(os.getenv('PORT', '5000'))
     
