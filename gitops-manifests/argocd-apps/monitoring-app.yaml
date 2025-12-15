@@ -19,6 +19,7 @@ spec:
             nodePort: 30000
         
         prometheus:
+          enabled: true
           prometheusSpec:
             serviceMonitorSelectorNilUsesHelmValues: false
             serviceMonitorNamespaceSelector: {}
