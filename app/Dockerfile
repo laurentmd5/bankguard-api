@@ -18,4 +18,16 @@ USER appuser
 ENV PYTHONUNBUFFERED=1 PYTHONPATH=/app FLASK_APP=app.py PROMETHEUS_MULTIPROC_DIR=/tmp
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "--worker-class", "gthread", "--access-logfile", "-", "--error-logfile", "-", "--timeout", "30", "--keepalive", "5", "--max-requests", "1000", "--max-requests-jitter", "50", "app:app"]
+# OPTIMISATION POUR K8s : moins de workers mais plus de threads
+CMD ["gunicorn", \
+     "--bind", "0.0.0.0:5000", \
+     "--workers", "2", \
+     "--threads", "4", \
+     "--worker-class", "gthread", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--timeout", "120", \
+     "--keep-alive", "5", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "50", \
+     "app:app"]

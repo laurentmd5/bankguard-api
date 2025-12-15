@@ -4,36 +4,37 @@ metadata:
   name: bankguard-api
 spec:
   replicas: 1
-  revisionHistoryLimit: 2
+  revisionHistoryLimit: 1  # ← REDUIT à 1 seule révision historique
   template:
     spec:
       containers:
       - name: bankguard-api
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "512Mi"
+            memory: "512Mi"  # ← AUGMENTÉ
             cpu: "400m"
+          limits:
+            memory: "1Gi"    # ← AUGMENTÉ
+            cpu: "800m"
         startupProbe:
           httpGet:
             path: /health
             port: 5000
-          failureThreshold: 30
+          initialDelaySeconds: 20  # ← AJOUTÉ
           periodSeconds: 10
-          timeoutSeconds: 5
+          timeoutSeconds: 10       # ← AUGMENTÉ (5 → 10)
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /health
             port: 5000
-          periodSeconds: 30
-          timeoutSeconds: 5
-          failureThreshold: 6    # ← AUGMENTÉ (3 → 6)
+          periodSeconds: 45        # ← AUGMENTÉ (30 → 45)
+          timeoutSeconds: 10       # ← AUGMENTÉ (5 → 10)
+          failureThreshold: 6
         readinessProbe:
           httpGet:
             path: /health
             port: 5000
-          periodSeconds: 20
-          timeoutSeconds: 5
+          periodSeconds: 30
+          timeoutSeconds: 10       # ← AUGMENTÉ
           failureThreshold: 3
