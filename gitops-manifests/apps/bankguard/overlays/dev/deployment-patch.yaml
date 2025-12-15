@@ -26,3 +26,27 @@ spec:
           value: "true"
         - name: DEBUG_METRICS
           value: "1"
+        # PROBES CORRIGÉES - AJOUTÉES ICI
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          failureThreshold: 30     # 30 tentatives max
+          periodSeconds: 10        # Toutes les 10s
+          # Total: 30 * 10 = 300s = 5 minutes pour démarrer
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 0   # Pas besoin avec startupProbe
+          periodSeconds: 30        # Vérifier toutes les 30s
+          timeoutSeconds: 5        # Timeout 5s (pas 1s)
+          failureThreshold: 3      # 3 échecs = redémarrage
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 0   # Pas besoin avec startupProbe
+          periodSeconds: 20        # Vérifier toutes les 20s
+          timeoutSeconds: 5        # Timeout 5s (pas 1s)
+          failureThreshold: 3      # 3 échecs = pod pas ready
