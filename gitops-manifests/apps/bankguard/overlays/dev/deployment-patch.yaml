@@ -4,37 +4,42 @@ metadata:
   name: bankguard-api
 spec:
   replicas: 1
-  revisionHistoryLimit: 1  # ← REDUIT à 1 seule révision historique
+  revisionHistoryLimit: 1
   template:
     spec:
       containers:
       - name: bankguard-api
         resources:
           requests:
-            memory: "512Mi"  # ← AUGMENTÉ
+            memory: "512Mi"
             cpu: "400m"
           limits:
-            memory: "1Gi"    # ← AUGMENTÉ
+            memory: "1Gi"
             cpu: "800m"
+        # STARTUP PROBE - RAPIDE (vérifie juste que l'app tourne)
         startupProbe:
           httpGet:
-            path: /health
+            path: /health/live  # ← NOUVEAU ENDPOINT RAPIDE
             port: 5000
-          initialDelaySeconds: 20  # ← AJOUTÉ
-          periodSeconds: 10
-          timeoutSeconds: 10       # ← AUGMENTÉ (5 → 10)
-          failureThreshold: 30
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3      # ← COURT (3 secondes)
+          failureThreshold: 30   # 30×5s = 150s (2.5min)
+        # LIVENESS PROBE - RAPIDE (vérifie que l'app tourne)
         livenessProbe:
           httpGet:
-            path: /health
+            path: /health/live  # ← NOUVEAU ENDPOINT RAPIDE
             port: 5000
-          periodSeconds: 45        # ← AUGMENTÉ (30 → 45)
-          timeoutSeconds: 10       # ← AUGMENTÉ (5 → 10)
-          failureThreshold: 6
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 3      # ← COURT
+          failureThreshold: 3
+        # READINESS PROBE - COMPLET (vérifie DB+Redis)
         readinessProbe:
           httpGet:
-            path: /health
+            path: /health/ready  # ← NOUVEAU ENDPOINT COMPLET
             port: 5000
+          initialDelaySeconds: 10
           periodSeconds: 30
-          timeoutSeconds: 10       # ← AUGMENTÉ
+          timeoutSeconds: 15     # ← LONG (15s pour DB+Redis)
           failureThreshold: 3
