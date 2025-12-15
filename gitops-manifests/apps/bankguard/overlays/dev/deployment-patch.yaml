@@ -3,50 +3,35 @@ kind: Deployment
 metadata:
   name: bankguard-api
 spec:
-  replicas: 2  # Moins de réplicas pour dev
+  replicas: 1
   template:
     spec:
       containers:
       - name: bankguard-api
-        # Ressources réduites pour dev
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "50m"
+            memory: "256Mi"
+            cpu: "200m"
           limits:
-            memory: "128Mi"
-            cpu: "100m"
-        # Variables supplémentaires pour dev
-        env:
-        - name: DEVELOPMENT_MODE
-          value: "true"
-        - name: SKIP_AUTH
-          value: "true"
-        - name: FLASK_DEBUG
-          value: "true"
-        - name: DEBUG_METRICS
-          value: "1"
-        # PROBES CORRIGÉES - AJOUTÉES ICI
+            memory: "512Mi"
+            cpu: "400m"
         startupProbe:
           httpGet:
             path: /health
             port: 5000
-          failureThreshold: 30     # 30 tentatives max
-          periodSeconds: 10        # Toutes les 10s
-          # Total: 30 * 10 = 300s = 5 minutes pour démarrer
+          failureThreshold: 30
+          periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /health
             port: 5000
-          initialDelaySeconds: 0   # Pas besoin avec startupProbe
-          periodSeconds: 30        # Vérifier toutes les 30s
-          timeoutSeconds: 5        # Timeout 5s (pas 1s)
-          failureThreshold: 3      # 3 échecs = redémarrage
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /health
             port: 5000
-          initialDelaySeconds: 0   # Pas besoin avec startupProbe
-          periodSeconds: 20        # Vérifier toutes les 20s
-          timeoutSeconds: 5        # Timeout 5s (pas 1s)
-          failureThreshold: 3      # 3 échecs = pod pas ready
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
