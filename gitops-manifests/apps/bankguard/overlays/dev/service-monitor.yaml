@@ -4,14 +4,10 @@ metadata:
   name: bankguard-monitor
   namespace: bankguard-dev
   labels:
-    # Labels ESSENTIELS pour la sélection par Prometheus
-    release: monitoring-stack
-    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
-    app.kubernetes.io/instance: monitoring-stack
-    app.kubernetes.io/part-of: kube-prometheus-stack
-    # Labels pour ton app
     app.kubernetes.io/component: api
-    app.kubernetes.io/managed-by: gitops
+    app.kubernetes.io/name: bankguard-api
+    app.kubernetes.io/instance: bankguard
+    app.kubernetes.io/part-of: bankguard-system
 spec:
   selector:
     matchLabels:

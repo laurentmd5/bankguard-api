@@ -6,6 +6,48 @@ grafana:
     nodePort: 30000
 
 prometheus:
+  enabled: true
   prometheusSpec:
+    # IMPORTANT: Activer le stockage
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+    
+    # Ressources pour dev
+    resources:
+      requests:
+        memory: 400Mi
+        cpu: 200m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+    
+    # IMPORTANT: Sélecteurs vides pour découvrir TOUS les ServiceMonitors
     serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
     serviceMonitorNamespaceSelector: {}
+    
+    # Sélecteurs pour les règles
+    ruleSelectorNilUsesHelmValues: false
+    ruleSelector: {}
+    ruleNamespaceSelector: {}
+    
+    # Sécurité
+    securityContext:
+      fsGroup: 2000
+      runAsNonRoot: true
+      runAsUser: 1000
+
+alertmanager:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: true
+
+kube-state-metrics:
+  enabled: true
