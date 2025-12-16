@@ -12,9 +12,5 @@ resources:
   # 2. Application BankGuard (environnement dev)
   - apps/bankguard/overlays/dev/
   
-  # Note: Les bases de données (PostgreSQL/Redis) seront ajoutées
-  # dans un second temps pour garder la complexité gérable
-  # - apps/databases/overlays/dev/
-  
-  # Note: Monitoring sera ajouté en Phase 5
-  # - apps/monitoring/
+  # 3. Monitoring Stack (Phase 5 - AJOUTÉ MAINTENANT)
+  - infra/monitoring/overlays/dev/
