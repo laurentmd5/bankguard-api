@@ -16,7 +16,7 @@ resources:
 # ⚠️ TAG PLACEHOLDER — sera modifié automatiquement par ArgoCD Image Updater
 images:
   - name: ghcr.io/laurentmd5/bankguard-api
-    newTag: dev-0000000
+    newTag: 68039fa
 
 configMapGenerator:
   - name: bankguard-config
